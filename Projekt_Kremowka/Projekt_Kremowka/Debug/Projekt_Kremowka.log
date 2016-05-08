@@ -1,0 +1,5 @@
+﻿  main.cpp
+c:\users\krzysztof\source\repos\projekt_kremowka\projekt_kremowka\projekt_kremowka\main.cpp(114): warning C4018: '<': signed/unsigned mismatch
+c:\users\krzysztof\source\repos\projekt_kremowka\projekt_kremowka\projekt_kremowka\main.cpp(184): warning C4018: '<': signed/unsigned mismatch
+c:\users\krzysztof\source\repos\projekt_kremowka\projekt_kremowka\projekt_kremowka\main.cpp(70): error C4996: 'clCreateCommandQueue': was declared deprecated
+  c:\program files (x86)\amd app sdk\3.0\include\cl\cl.h(1359): note: see declaration of 'clCreateCommandQueue'
