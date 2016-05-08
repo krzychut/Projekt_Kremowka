@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include <string.h>
+#include <algorithm>
 using namespace std;
 
 #define __NO_STD_VECTOR // Use cl::vector and cl::string and
@@ -37,10 +38,10 @@ int main(int argc, char* argv[])
 	}
 
 	cl_int err;     // error code returned from api calls
-
+/*
 	size_t global;  // global domain size for our calculation
 	size_t local;   // local domain size for our calculation
-
+*/
 	cl_platform_id cpPlatform; // OpenCL platform
 	cl_device_id device_id;    // compute device id
 	cl_context context;        // compute context
@@ -134,32 +135,45 @@ int main(int argc, char* argv[])
 	}
 
 	// create data for the run
-	float* data = new float[DATA_SIZE];    // original data set given to device
+	float* dataA = new float[DATA_SIZE];    // original data set given to device
+	float* dataB = new float[DATA_SIZE];    // original data set given to device
 	float* results = new float[DATA_SIZE]; // results returned from device
 	unsigned int correct;               // number of correct results returned
-	cl_mem input;                       // device memory used for the input array
+	cl_mem inputA;                       // device memory used for the input array
+	cl_mem inputB;
 	cl_mem output;                      // device memory used for the output array
-
 										// Fill the vector with random float values
 	unsigned int count = DATA_SIZE;
 	for (unsigned int i = 0; i < count; i++)
-		data[i] = rand() / (float)RAND_MAX;
+		dataA[i] = rand() / (float)RAND_MAX;
+
+	sort(dataA, dataA + DATA_SIZE - 1);	// Sort both arrays for quicker operations
+	sort(dataB, dataB + DATA_SIZE - 1);	// Ideally, should be done by the GPU
 
 	// Create the device memory vectors
 	//
-	input = clCreateBuffer(context, CL_MEM_READ_ONLY,
+	inputA = clCreateBuffer(context, CL_MEM_READ_ONLY,
+		sizeof(float) * count, NULL, NULL);
+	inputB = clCreateBuffer(context, CL_MEM_READ_ONLY,
 		sizeof(float) * count, NULL, NULL);
 	output = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
 		sizeof(float) * count, NULL, NULL);
-	if (!input || !output) {
+	if (!inputA || !inputB || !output) {
 		cerr << "Error: Failed to allocate device memory!" << endl;
 		exit(1);
 	}
 
 	// Transfer the input vector into device memory
-	err = clEnqueueWriteBuffer(commands, input,
+	err = clEnqueueWriteBuffer(commands, inputA,
 		CL_TRUE, 0, sizeof(float) * count,
-		data, 0, NULL, NULL);
+		dataA, 0, NULL, NULL);
+	if (err != CL_SUCCESS) {
+		cerr << "Error: Failed to write to source array!" << endl;
+		exit(1);
+	}
+	err = clEnqueueWriteBuffer(commands, inputB,
+		CL_TRUE, 0, sizeof(float) * count,
+		dataB, 0, NULL, NULL);
 	if (err != CL_SUCCESS) {
 		cerr << "Error: Failed to write to source array!" << endl;
 		exit(1);
@@ -169,9 +183,10 @@ int main(int argc, char* argv[])
 	err = 0;
 	for (int i = 0; i < KERNELS_COUNT; i++)
 	{
-		err = clSetKernelArg(kernel[i], 0, sizeof(cl_mem), &input);
-		err |= clSetKernelArg(kernel[i], 1, sizeof(cl_mem), &output);
-		err |= clSetKernelArg(kernel[i], 2, sizeof(const unsigned int), &count);
+		err = clSetKernelArg(kernel[i], 0, sizeof(cl_mem), &inputA);
+		err |= clSetKernelArg(kernel[i], 1, sizeof(cl_mem), &inputB);
+		err |= clSetKernelArg(kernel[i], 2, sizeof(cl_mem), &output);
+		err |= clSetKernelArg(kernel[i], 3, sizeof(const unsigned int), &count);
 		if (err != CL_SUCCESS) {
 			cerr << "Error: Failed to set kernel arguments! " << err << endl;
 			exit(1);
@@ -227,7 +242,7 @@ int main(int argc, char* argv[])
 	//
 	correct = 0;
 	for (unsigned int i = 0; i < count; i++) {
-		if (results[i] == data[i] * data[i])
+		if (results[i] == dataA[i] + dataB[i])
 			correct++;
 	}
 
@@ -237,12 +252,16 @@ int main(int argc, char* argv[])
 		<< "% correct values" << endl;
 
 	// Shutdown and cleanup
-	delete[] data; delete[] results;
+	delete[] dataA; delete[] dataB; delete[] results;
 
-	clReleaseMemObject(input);
+	clReleaseMemObject(inputA);
+	clReleaseMemObject(inputB);
 	clReleaseMemObject(output);
 	clReleaseProgram(program);
-	clReleaseKernel(kernel[0]);
+	for (int i = 0; i < KERNELS_COUNT; i++)
+	{
+		clReleaseKernel(kernel[i]);
+	}
 	clReleaseCommandQueue(commands);
 	clReleaseContext(context);
 

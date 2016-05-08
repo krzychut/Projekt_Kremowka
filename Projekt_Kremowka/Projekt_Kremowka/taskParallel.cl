@@ -1,11 +1,9 @@
-__kernel void kernel_0(__global float* input, __global float* output, const unsigned int count)
+// Indeks Jaccarda
+__kernel void kernel_0(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
 {
+
 	for(unsigned int i = 0; i < count; i++)
 	{
-		output[i] = input[i] * input[i];
+		output[i] = inputA[i] + inputB[i];
 	}
-	/*if(i < count)
-	{
-		output[i] = input[i]*input[i];
-	}*/
 }

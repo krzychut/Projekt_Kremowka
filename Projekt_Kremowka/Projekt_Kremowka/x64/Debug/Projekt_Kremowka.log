@@ -1,4 +1,2 @@
 ﻿  main.cpp
-c:\users\krzysztof\source\repos\projekt_kremowka\projekt_kremowka\projekt_kremowka\main.cpp(41): warning C4101: 'global': unreferenced local variable
-c:\users\krzysztof\source\repos\projekt_kremowka\projekt_kremowka\projekt_kremowka\main.cpp(42): warning C4101: 'local': unreferenced local variable
   Projekt_Kremowka.vcxproj -> C:\Users\Krzysztof\Source\Repos\Projekt_Kremowka\Projekt_Kremowka\x64\Debug\Projekt_Kremowka.exe
