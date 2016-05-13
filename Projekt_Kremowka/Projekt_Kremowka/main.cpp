@@ -9,9 +9,9 @@ using namespace std;
 #include <CL/cl.h>
 
 
-#define DATA_SIZE (1024*1240)
+#define DATA_SIZE (10)
 #define MAX_SOURCE_SIZE 0x100000
-#define KERNELS_COUNT 1
+#define KERNELS_COUNT 2
 
 /*const char *KernelSource = "\n"		      \
 "__kernel void square(                    \n" \
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
 
 
 	// Create the compute program from the source buffer
-	cout << "Creating compure program with the source code provided" << endl;
+	cout << "Creating compute program with the source code provided" << endl;
 	program = clCreateProgramWithSource(context, 1,
 		(const char **)&KernelSource,
 		(const size_t*) &SourceSize, &err);
@@ -124,42 +124,47 @@ int main(int argc, char* argv[])
 	{
 		char tmp[10];
 		sprintf(tmp, "%d", i);
-		char kernel_ID[10];
+		char kernel_ID[16];
 		strcpy(kernel_ID, "kernel_");
 		strcat(kernel_ID, tmp);
-		kernel[0] = clCreateKernel(program, kernel_ID , &err);
-		if (!kernel || err != CL_SUCCESS) {
+		cout << "Creating: " << kernel_ID << endl;
+		kernel[i] = clCreateKernel(program, kernel_ID , &err);
+		if (!kernel[i] || err != CL_SUCCESS) {
 			cerr << "Error: Failed to create compute kernel!" << endl;
+			getchar();
 			exit(1);
 		}
 	}
 
+	/*kernel[0] = clCreateKernel(program, "kernel_0", &err);
+	kernel[1] = clCreateKernel(program, "kernel_1", &err);*/
+
 	// create data for the run
 	float* dataA = new float[DATA_SIZE];    // original data set given to device
 	float* dataB = new float[DATA_SIZE];    // original data set given to device
-	float* results = new float[DATA_SIZE]; // results returned from device
+	float* results = new float[KERNELS_COUNT]; // results returned from device
 	unsigned int correct;               // number of correct results returned
 	cl_mem inputA;                       // device memory used for the input array
 	cl_mem inputB;
 	cl_mem output;                      // device memory used for the output array
 										// Fill the vector with random float values
 	unsigned int count = DATA_SIZE;
+	unsigned int kernelsCount = KERNELS_COUNT;
 	for (unsigned int i = 0; i < count; i++)
 		dataA[i] = rand() / (float)RAND_MAX;
-
-	sort(dataA, dataA + DATA_SIZE - 1);	// Sort both arrays for quicker operations
-	sort(dataB, dataB + DATA_SIZE - 1);	// Ideally, should be done by the GPU
+	for (unsigned int i = 0; i < count; i++)
+		dataB[i] = rand() / (float)RAND_MAX;
 
 	// Create the device memory vectors
-	//
 	inputA = clCreateBuffer(context, CL_MEM_READ_ONLY,
 		sizeof(float) * count, NULL, NULL);
 	inputB = clCreateBuffer(context, CL_MEM_READ_ONLY,
 		sizeof(float) * count, NULL, NULL);
 	output = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
-		sizeof(float) * count, NULL, NULL);
+		sizeof(float) * kernelsCount, NULL, NULL);
 	if (!inputA || !inputB || !output) {
 		cerr << "Error: Failed to allocate device memory!" << endl;
+		getchar();
 		exit(1);
 	}
 
@@ -168,14 +173,16 @@ int main(int argc, char* argv[])
 		CL_TRUE, 0, sizeof(float) * count,
 		dataA, 0, NULL, NULL);
 	if (err != CL_SUCCESS) {
-		cerr << "Error: Failed to write to source array!" << endl;
+		cerr << "Error: Failed to write to source array inputA!" << endl;
+		getchar();
 		exit(1);
 	}
 	err = clEnqueueWriteBuffer(commands, inputB,
 		CL_TRUE, 0, sizeof(float) * count,
 		dataB, 0, NULL, NULL);
 	if (err != CL_SUCCESS) {
-		cerr << "Error: Failed to write to source array!" << endl;
+		cerr << "Error: Failed to write to source array inputB!" << endl;
+		getchar();
 		exit(1);
 	}
 
@@ -187,11 +194,16 @@ int main(int argc, char* argv[])
 		err |= clSetKernelArg(kernel[i], 1, sizeof(cl_mem), &inputB);
 		err |= clSetKernelArg(kernel[i], 2, sizeof(cl_mem), &output);
 		err |= clSetKernelArg(kernel[i], 3, sizeof(const unsigned int), &count);
+		if (err == CL_INVALID_KERNEL)
+			cout << "Invalid kernel: kernel_" << i << endl;
 		if (err != CL_SUCCESS) {
-			cerr << "Error: Failed to set kernel arguments! " << err << endl;
+			cerr << "Error: Failed to set kernel arguments! " << err << " kernel ID_" << i << endl;
+			getchar();
 			exit(1);
 		}
 	}
+
+
 /*
 	// Get the maximum work group size for executing the kernel on the device
 	err = clGetKernelWorkGroupInfo(kernel[0], device_id,
@@ -225,30 +237,36 @@ int main(int argc, char* argv[])
 		}
 	}
 
+
+
+
 	// Wait for all commands to complete
 	clFinish(commands);
 
 	// Read back the results from the device to verify the output
-	//
 	err = clEnqueueReadBuffer(commands, output,
-		CL_TRUE, 0, sizeof(float) * count,
+		CL_TRUE, 0, sizeof(float) * kernelsCount,
 		results, 0, NULL, NULL);
 	if (err != CL_SUCCESS) {
 		cerr << "Error: Failed to read output array! " << err << endl;
+		getchar();
 		exit(1);
 	}
 
 	// Validate our results
-	//
 	correct = 0;
-	for (unsigned int i = 0; i < count; i++) {
-		if (results[i] == dataA[i] + dataB[i])
-			correct++;
+	if (dataA[0] + dataB[0] == results[0])
+	{
+		correct++;
+	}
+	if (dataA[1] * dataB[1] == results[1])
+	{
+		correct++;
 	}
 
 	// Print a brief summary detailing the results
-	cout << "Computed " << correct << "/" << count << " correct values" << endl;
-	cout << "Computed " << 100.f * (float)correct / (float)count
+	cout << "Computed " << correct << "/" << KERNELS_COUNT << " correct values" << endl;
+	cout << "Computed " << 100.f * (float)correct / (float)KERNELS_COUNT
 		<< "% correct values" << endl;
 
 	// Shutdown and cleanup
