@@ -1,3 +1,8 @@
+/*
+Base code for the application sampled from:
+http://www.codeproject.com/Articles/110685/Part-1-OpenCL-Portable-Parallelism
+*/
+
 #include <iostream>
 #include <cstdio>
 #include <string.h>
@@ -11,19 +16,7 @@ using namespace std;
 
 #define DATA_SIZE (10)
 #define MAX_SOURCE_SIZE 0x100000
-#define KERNELS_COUNT 2
-
-/*const char *KernelSource = "\n"		      \
-"__kernel void square(                    \n" \
-"   __global float* input,                \n" \
-"   __global float* output,               \n" \
-"   const unsigned int count)             \n" \
-"{                                        \n" \
-"   int i = get_global_id(0);             \n" \
-"   if(i < count)                         \n" \
-"       output[i] = input[i] * input[i];  \n" \
-"}                                        \n" \
-"\n";*/
+#define KERNELS_COUNT 3
 
 int main(int argc, char* argv[])
 {
@@ -47,7 +40,7 @@ int main(int argc, char* argv[])
 	cl_context context;        // compute context
 	cl_command_queue commands; // compute command queue
 	cl_program program;        // compute program
-	cl_kernel kernel[KERNELS_COUNT] = {NULL};          // compute kernel
+	cl_kernel kernel[KERNELS_COUNT] = { NULL };          // compute kernel
 
 							   // Connect to a compute device
 	err = clGetPlatformIDs(1, &cpPlatform, NULL);
@@ -98,7 +91,7 @@ int main(int argc, char* argv[])
 	cout << "Creating compute program with the source code provided" << endl;
 	program = clCreateProgramWithSource(context, 1,
 		(const char **)&KernelSource,
-		(const size_t*) &SourceSize, &err);
+		(const size_t*)&SourceSize, &err);
 	if (!program) {
 		cerr << "Error: Failed to create compute program!" << endl;
 		return EXIT_FAILURE;
@@ -120,7 +113,7 @@ int main(int argc, char* argv[])
 	}
 
 	// Create the compute kernel in the program
-	for (int i = 0; i < KERNELS_COUNT; i++) 
+	for (int i = 0; i < KERNELS_COUNT; i++)
 	{
 		char tmp[10];
 		sprintf(tmp, "%d", i);
@@ -128,7 +121,7 @@ int main(int argc, char* argv[])
 		strcpy(kernel_ID, "kernel_");
 		strcat(kernel_ID, tmp);
 		cout << "Creating: " << kernel_ID << endl;
-		kernel[i] = clCreateKernel(program, kernel_ID , &err);
+		kernel[i] = clCreateKernel(program, kernel_ID, &err);
 		if (!kernel[i] || err != CL_SUCCESS) {
 			cerr << "Error: Failed to create compute kernel!" << endl;
 			getchar();
@@ -139,7 +132,7 @@ int main(int argc, char* argv[])
 	/*kernel[0] = clCreateKernel(program, "kernel_0", &err);
 	kernel[1] = clCreateKernel(program, "kernel_1", &err);*/
 
-	// create data for the run
+	// Create data for the run
 	float* dataA = new float[DATA_SIZE];    // original data set given to device
 	float* dataB = new float[DATA_SIZE];    // original data set given to device
 	float* results = new float[KERNELS_COUNT]; // results returned from device
@@ -204,28 +197,28 @@ int main(int argc, char* argv[])
 	}
 
 
-/*
-	// Get the maximum work group size for executing the kernel on the device
-	err = clGetKernelWorkGroupInfo(kernel[0], device_id,
-		CL_KERNEL_WORK_GROUP_SIZE,
-		sizeof(local), &local, NULL);
-	if (err != CL_SUCCESS) {
-		cerr << "Error: Failed to retrieve kernel work group info! "
-			<< err << endl;
-		exit(1);
-	}
+	/*
+		// Get the maximum work group size for executing the kernel on the device
+		err = clGetKernelWorkGroupInfo(kernel[0], device_id,
+			CL_KERNEL_WORK_GROUP_SIZE,
+			sizeof(local), &local, NULL);
+		if (err != CL_SUCCESS) {
+			cerr << "Error: Failed to retrieve kernel work group info! "
+				<< err << endl;
+			exit(1);
+		}
 
-	// Execute the kernel over the vector using the 
-	// maximum number of work group items for this device
-	global = count;
-	err = clEnqueueNDRangeKernel(commands, kernel[0],
-		1, NULL, &global, &local,
-		0, NULL, NULL);
-	if (err != CL_SUCCESS) {
-		cerr << "Error: Failed to execute kernel!" << endl;
-		return EXIT_FAILURE;
-	}
-*/
+		// Execute the kernel over the vector using the
+		// maximum number of work group items for this device
+		global = count;
+		err = clEnqueueNDRangeKernel(commands, kernel[0],
+			1, NULL, &global, &local,
+			0, NULL, NULL);
+		if (err != CL_SUCCESS) {
+			cerr << "Error: Failed to execute kernel!" << endl;
+			return EXIT_FAILURE;
+		}
+	*/
 	//Enqueue all the kernels to be executed
 	for (int i = 0; i < KERNELS_COUNT; i++)
 	{
@@ -268,6 +261,11 @@ int main(int argc, char* argv[])
 	cout << "Computed " << correct << "/" << KERNELS_COUNT << " correct values" << endl;
 	cout << "Computed " << 100.f * (float)correct / (float)KERNELS_COUNT
 		<< "% correct values" << endl;
+
+	for (int i = 0; i < KERNELS_COUNT; i++)
+	{
+		cout << "kernel_" << i << ": " << results[i] << endl;
+	}
 
 	// Shutdown and cleanup
 	delete[] dataA; delete[] dataB; delete[] results;
