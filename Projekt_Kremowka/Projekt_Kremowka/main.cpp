@@ -14,9 +14,9 @@ using namespace std;
 #include <CL/cl.h>
 
 
-#define DATA_SIZE (10)
+#define DATA_SIZE (100000)
 #define MAX_SOURCE_SIZE 0x100000
-#define KERNELS_COUNT 3
+#define KERNELS_COUNT 7
 
 int main(int argc, char* argv[])
 {
@@ -129,9 +129,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	/*kernel[0] = clCreateKernel(program, "kernel_0", &err);
-	kernel[1] = clCreateKernel(program, "kernel_1", &err);*/
-
 	// Create data for the run
 	float* dataA = new float[DATA_SIZE];    // original data set given to device
 	float* dataB = new float[DATA_SIZE];    // original data set given to device
@@ -219,6 +216,7 @@ int main(int argc, char* argv[])
 			return EXIT_FAILURE;
 		}
 	*/
+
 	//Enqueue all the kernels to be executed
 	for (int i = 0; i < KERNELS_COUNT; i++)
 	{
@@ -229,9 +227,6 @@ int main(int argc, char* argv[])
 			exit(1);
 		}
 	}
-
-
-
 
 	// Wait for all commands to complete
 	clFinish(commands);
@@ -257,11 +252,7 @@ int main(int argc, char* argv[])
 		correct++;
 	}
 
-	// Print a brief summary detailing the results
-	cout << "Computed " << correct << "/" << KERNELS_COUNT << " correct values" << endl;
-	cout << "Computed " << 100.f * (float)correct / (float)KERNELS_COUNT
-		<< "% correct values" << endl;
-
+	cout << "Calculations complete. Results:" << endl;
 	for (int i = 0; i < KERNELS_COUNT; i++)
 	{
 		cout << "kernel_" << i << ": " << results[i] << endl;
