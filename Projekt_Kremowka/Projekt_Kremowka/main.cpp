@@ -5,8 +5,10 @@ http://www.codeproject.com/Articles/110685/Part-1-OpenCL-Portable-Parallelism
 
 #include <iostream>
 #include <cstdio>
+#include <ctime>
 #include <string.h>
 #include <algorithm>
+#include <fstream>
 using namespace std;
 
 #define __NO_STD_VECTOR // Use cl::vector and cl::string and
@@ -17,6 +19,8 @@ using namespace std;
 #define DATA_SIZE (100000)
 #define MAX_SOURCE_SIZE 0x100000
 #define KERNELS_COUNT 7
+#define FILE_ROWS 100
+#define FILE_COLUMNS 100
 
 int main(int argc, char* argv[])
 {
@@ -130,7 +134,19 @@ int main(int argc, char* argv[])
 	}
 
 	// Create data for the run
-	float* dataA = new float[DATA_SIZE];    // original data set given to device
+	unsigned int correct;
+	srand(time(NULL));
+	int rowA, rowB, count, firstColumn;
+	rowA = rand() % FILE_ROWS;
+	rowB = rand() % (FILE_ROWS - rowA) + rowA;
+	count = rand() % FILE_COLUMNS;
+	firstColumn = rand() % (FILE_COLUMNS - count);
+
+	cout << "RowA, RowB, first column: " << rowA << " " << rowB << " " << " " << firstColumn << endl;
+
+	unsigned int kernelsCount = KERNELS_COUNT;
+
+/*	float* dataA = new float[DATA_SIZE];    // original data set given to device
 	float* dataB = new float[DATA_SIZE];    // original data set given to device
 	float* results = new float[KERNELS_COUNT]; // results returned from device
 	unsigned int correct;               // number of correct results returned
@@ -143,7 +159,60 @@ int main(int argc, char* argv[])
 	for (unsigned int i = 0; i < count; i++)
 		dataA[i] = rand() / (float)RAND_MAX;
 	for (unsigned int i = 0; i < count; i++)
-		dataB[i] = rand() / (float)RAND_MAX;
+		dataB[i] = rand() / (float)RAND_MAX;*/
+
+	float* dataA = new float[count];
+	float* dataB = new float[count];
+	float* results = new float[KERNELS_COUNT];
+	cl_mem inputA;
+	cl_mem inputB;
+	cl_mem output;
+
+
+	ifstream file;
+	file.open("data.txt");
+	int temp;
+	for (int i = 0; i < rowA * FILE_COLUMNS; i++)
+	{
+		file >> temp;
+	}
+	cout << temp << endl;
+	for (int i = 0; i < firstColumn; i++);
+	{
+		file >> temp;
+	}
+	for (int i = 0; i < count; i++)
+	{
+		file >> dataA[i];
+	}
+	for (int i = count; i < FILE_COLUMNS; i++)
+	{
+		file >> temp;
+	}
+	for (int i = 0; i < (rowB - rowA) * FILE_COLUMNS; i++)
+	{
+		file >> temp;
+	}
+	for (int i = 0; i < firstColumn; i++);
+	{
+		file >> temp;
+	}
+	for (int i = 0; i < count; i++)
+	{
+		file >> dataB[i];
+	}
+	file.close();
+
+	for (int i = 0; i < count; i++)
+	{
+		cout << dataA[i] << " ";
+	}
+	cout << endl;
+	for (int i = 0; i < count; i++)
+	{
+		cout << dataB[i] << " ";
+	}
+	cout << endl;
 
 	// Create the device memory vectors
 	inputA = clCreateBuffer(context, CL_MEM_READ_ONLY,
