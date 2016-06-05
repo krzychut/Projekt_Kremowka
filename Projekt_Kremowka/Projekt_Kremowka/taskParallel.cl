@@ -1,13 +1,12 @@
-// Indeks Jaccarda
+// Metryka Lorentza
 __kernel void kernel_0(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
 {
-/*
-	// Calculate the cardinality of inputA && inputB
-	unsigned int intersection = 0;
-
-	// Calculate the cardinality of inputA || inputB
-	unsigned int union = 0;
-*/
+	float result;
+	for(int i = 0; i < count; i++)
+	{
+		result += log(1.0f + fabs(inputA[i] - inputB[i]));
+	}
+	output[0] = result;
 }
 
 // Metryka Miejska (Odl. Minkowskiego L_1)
