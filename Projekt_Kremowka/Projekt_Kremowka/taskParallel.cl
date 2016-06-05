@@ -208,3 +208,105 @@ __kernel void kernel_12(__global float* inputA, __global float* inputB, __global
 	}
 	output[12] =  sqrt ( 2 - 2 * A);
 }
+
+// Odleglosc Jeffreysa
+__kernel void kernel_13(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i] - inputB[i])*log(inputA[i]/inputB[i]);
+    }
+    output[13] = A;
+}
+
+// Odleglosc Kullback-Leibler
+__kernel void kernel_14(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += inputA[i]*log(inputA[i]/inputB[i]);
+    }
+    output[14] = A;
+}
+
+//K Divergence
+__kernel void kernel_15(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += inputA[i]*log(2*inputA[i]/(inputA[i]+inputB[i]));
+    }
+    output[15] = A;
+}
+
+// Neyman
+__kernel void kernel_16(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i]-inputB[i])*(inputA[i]-inputB[i])/inputB[i];
+    }
+    output[16] = A;
+}
+
+// Taneja
+__kernel void kernel_17(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += ((inputA[i]+inputB[i])/2)*log((inputA[i]+inputB[i])/(2*sqrt(inputA[i]*inputB[i])));
+    }
+    output[17] = A;
+}
+
+// Divergence
+__kernel void kernel_18(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i]-inputB[i])*(inputA[i]-inputB[i])/(inputA[i]+inputB[i])/(inputA[i]+inputB[i]);
+    }
+    output[18] = 2*A;
+}
+
+// Probabilistic Symmetric
+__kernel void kernel_19(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i]-inputB[i])*(inputA[i]-inputB[i])/(inputA[i]+inputB[i]);
+    }
+    output[19] = 2*A;
+}
+
+// Clark
+__kernel void kernel_20(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        float div = inputA[i] - inputB[i];
+        if(div < 0)
+            div *= (-1);
+        A += div / (inputA[i] + inputB[i]);
+    }
+    output[20] = sqrt(A);
+}
+
+// Additive Symmetric
+__kernel void kernel_21(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i]-inputB[i])*(inputA[i]-inputB[i])*(inputA[i]+inputB[i])/(inputA[i]*inputB[i]);
+    }
+    output[21] = 2*A;
+}
