@@ -123,3 +123,88 @@ __kernel void kernel_6(__global float* inputA, __global float* inputB, __global 
 	}
 	output[6] = D;
 }
+// Odleglosc Czekanowskiego
+__kernel void kernel_7(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0, B = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+		fabs ( A += ( inputA[i] - inputB[i]))
+	}
+	for( i = 0; i < count ; i++)
+	{
+        B += ( inputA[i] + inputB[i])
+	}
+	output[7] = A / B;
+}
+
+// Odleglosc  Wave Hedges
+__kernel void kernel_8(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+        A += ( fabs ( inputA[i] - inputB[i]) / ( fmax( inputA[i], inputB[i])));
+	}
+	output[8] = A;
+}
+
+// Odleglosc Kumar - Hassebrook
+__kernel void kernel_9(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0, B = 0, C = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+        A += inputA[i] * inputB[i];
+	}
+	for ( i = 0; i < count ; i++)
+	{
+        B += inputA[i] * inputA[i];
+	}
+	for ( i = 0; i < count ; i++)
+	{
+        C += inputB[i] * inputB[i];
+	}
+	output[9] = A / ( B + C - A);
+}
+
+// Odleglosc Ruzick
+__kernel void kernel_10(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0, B = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+		A += fmin ( inputA[i], inputB[i]);
+	}
+	for( i = 0; i < count ; i++)
+	{
+        B += fmax ( inputA[i], inputB[i]);
+	}
+	output[10] = A / B;
+}
+
+// Odleglosc Tanimoto
+__kernel void kernel_11(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0, B = 0, C = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+        A += fmax ( inputA[i], inputB[i]) - fmin ( inputA[i], inputB[i]);
+	}
+	for ( i = 0; i < count ; i++)
+	{
+        B += fmax ( inputA[i], inputB[i]);
+	}
+	output[11] = A / B;
+}
+
+// Odleglosc Matusita
+__kernel void kernel_12(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+        A += sqrt ( inputA[i] * inputB[i]) ;
+	}
+	output[12] =  sqrt ( 2 - 2 * A);
+}
