@@ -1,13 +1,12 @@
-// Indeks Jaccarda
+// Metryka Lorentza
 __kernel void kernel_0(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
 {
-/*
-	// Calculate the cardinality of inputA && inputB
-	unsigned int intersection = 0;
-
-	// Calculate the cardinality of inputA || inputB
-	unsigned int union = 0;
-*/
+	float result;
+	for(int i = 0; i < count; i++)
+	{
+		result += log(1.0f + fabs(inputA[i] - inputB[i]));
+	}
+	output[0] = result;
 }
 
 // Metryka Miejska (Odl. Minkowskiego L_1)
@@ -94,7 +93,7 @@ __kernel void kernel_4(__global float* inputA, __global float* inputB, __global 
 
 	float result = numerator / denominator;
 
-	output[4] = result;
+	output[4] = 100.0f * fabs(result);
 }
 
 // Metryka Canberra
@@ -123,3 +122,5 @@ __kernel void kernel_6(__global float* inputA, __global float* inputB, __global 
 	}
 	output[6] = D;
 }
+
+// Metryka Lorentza

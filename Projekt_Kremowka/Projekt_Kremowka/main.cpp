@@ -21,9 +21,11 @@ using namespace std;
 #define KERNELS_COUNT 7
 #define FILE_ROWS 100
 #define FILE_COLUMNS 100
-
+#define REPETITIONS 100
+#define THRESHOLD 20
 int main(int argc, char* argv[])
 {
+	srand(time(NULL));
 	int devType = CL_DEVICE_TYPE_GPU;
 
 	if (argc > 1) {
@@ -133,206 +135,160 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	// Create data for the run
-	unsigned int correct;
-	srand(time(NULL));
-	int rowA, rowB, count, firstColumn;
-	rowA = rand() % FILE_ROWS;
-	rowB = rand() % (FILE_ROWS - rowA) + rowA;
-	count = rand() % FILE_COLUMNS;
-	firstColumn = rand() % (FILE_COLUMNS - count);
-
-	cout << "RowA, RowB, first column: " << rowA << " " << rowB << " " << " " << firstColumn << endl;
-
-	unsigned int kernelsCount = KERNELS_COUNT;
-
-/*	float* dataA = new float[DATA_SIZE];    // original data set given to device
-	float* dataB = new float[DATA_SIZE];    // original data set given to device
-	float* results = new float[KERNELS_COUNT]; // results returned from device
-	unsigned int correct;               // number of correct results returned
-	cl_mem inputA;                       // device memory used for the input array
-	cl_mem inputB;
-	cl_mem output;                      // device memory used for the output array
-										// Fill the vector with random float values
-	unsigned int count = DATA_SIZE;
-	unsigned int kernelsCount = KERNELS_COUNT;
-	for (unsigned int i = 0; i < count; i++)
-		dataA[i] = rand() / (float)RAND_MAX;
-	for (unsigned int i = 0; i < count; i++)
-		dataB[i] = rand() / (float)RAND_MAX;*/
-
-	float* dataA = new float[count];
-	float* dataB = new float[count];
-	float* results = new float[KERNELS_COUNT];
-	cl_mem inputA;
-	cl_mem inputB;
-	cl_mem output;
 
 
-	ifstream file;
-	file.open("data.txt");
-	int temp;
-	for (int i = 0; i < rowA * FILE_COLUMNS; i++)
-	{
-		file >> temp;
-	}
-	cout << temp << endl;
-	for (int i = 0; i < firstColumn; i++);
-	{
-		file >> temp;
-	}
-	for (int i = 0; i < count; i++)
-	{
-		file >> dataA[i];
-	}
-	for (int i = count; i < FILE_COLUMNS; i++)
-	{
-		file >> temp;
-	}
-	for (int i = 0; i < (rowB - rowA) * FILE_COLUMNS; i++)
-	{
-		file >> temp;
-	}
-	for (int i = 0; i < firstColumn; i++);
-	{
-		file >> temp;
-	}
-	for (int i = 0; i < count; i++)
-	{
-		file >> dataB[i];
-	}
-	file.close();
+	/*__________
+	THIS IS WHERE THE MAGIC HAPPENS
+	__________*/
 
-	for (int i = 0; i < count; i++)
+	for (int i = 0; i < REPETITIONS; i++)
 	{
-		cout << dataA[i] << " ";
-	}
-	cout << endl;
-	for (int i = 0; i < count; i++)
-	{
-		cout << dataB[i] << " ";
-	}
-	cout << endl;
+		cout << "\n______________________\n	ITERATION: " << i+1 << endl;
+		// Create data for the run
+		unsigned int correct;
+		int rowA, rowB, count, firstColumn;
+		rowA = rand() % (FILE_ROWS-1);
+		rowB = rand() % (FILE_ROWS - rowA) + rowA;
+		count = rand() % (FILE_COLUMNS-1) +1;
+		firstColumn = rand() % (FILE_COLUMNS - count);
 
-	// Create the device memory vectors
-	inputA = clCreateBuffer(context, CL_MEM_READ_ONLY,
-		sizeof(float) * count, NULL, NULL);
-	inputB = clCreateBuffer(context, CL_MEM_READ_ONLY,
-		sizeof(float) * count, NULL, NULL);
-	output = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
-		sizeof(float) * kernelsCount, NULL, NULL);
-	if (!inputA || !inputB || !output) {
-		cerr << "Error: Failed to allocate device memory!" << endl;
-		getchar();
-		exit(1);
-	}
+		cout << "RowA, RowB, count, first column: " << rowA << ", " << rowB << ", "<< count << ", " << firstColumn << endl;
 
-	// Transfer the input vector into device memory
-	err = clEnqueueWriteBuffer(commands, inputA,
-		CL_TRUE, 0, sizeof(float) * count,
-		dataA, 0, NULL, NULL);
-	if (err != CL_SUCCESS) {
-		cerr << "Error: Failed to write to source array inputA!" << endl;
-		getchar();
-		exit(1);
-	}
-	err = clEnqueueWriteBuffer(commands, inputB,
-		CL_TRUE, 0, sizeof(float) * count,
-		dataB, 0, NULL, NULL);
-	if (err != CL_SUCCESS) {
-		cerr << "Error: Failed to write to source array inputB!" << endl;
-		getchar();
-		exit(1);
-	}
+		unsigned int kernelsCount = KERNELS_COUNT;
 
-	// Set the arguments to the compute kernels
-	err = 0;
-	for (int i = 0; i < KERNELS_COUNT; i++)
-	{
-		err = clSetKernelArg(kernel[i], 0, sizeof(cl_mem), &inputA);
-		err |= clSetKernelArg(kernel[i], 1, sizeof(cl_mem), &inputB);
-		err |= clSetKernelArg(kernel[i], 2, sizeof(cl_mem), &output);
-		err |= clSetKernelArg(kernel[i], 3, sizeof(const unsigned int), &count);
-		if (err == CL_INVALID_KERNEL)
-			cout << "Invalid kernel: kernel_" << i << endl;
-		if (err != CL_SUCCESS) {
-			cerr << "Error: Failed to set kernel arguments! " << err << " kernel ID_" << i << endl;
+		float* dataA = new float[count];
+		float* dataB = new float[count];
+		float* results = new float[KERNELS_COUNT];
+		cl_mem inputA;
+		cl_mem inputB;
+		cl_mem output;
+
+
+		ifstream file;							// this part reads numbers from the text file
+		file.open("data.txt");
+		int temp;
+		for (int i = 0; i < rowA * FILE_COLUMNS; i++)
+		{
+			file >> temp;
+		}
+		for (int i = 0; i < firstColumn; i++);
+		{
+			file >> temp;
+		}
+		for (int i = 0; i < count; i++)
+		{
+			file >> dataA[i];
+		}
+		for (int i = count; i < FILE_COLUMNS; i++)
+		{
+			file >> temp;
+		}
+		for (int i = 0; i < (rowB - rowA) * FILE_COLUMNS; i++)
+		{
+			file >> temp;
+		}
+		for (int i = 0; i < firstColumn; i++);
+		{
+			file >> temp;
+		}
+		for (int i = 0; i < count; i++)
+		{
+			file >> dataB[i];
+		}
+		file.close();
+
+		// Create the device memory vectors
+		inputA = clCreateBuffer(context, CL_MEM_READ_ONLY,
+			sizeof(float) * count, NULL, NULL);
+		inputB = clCreateBuffer(context, CL_MEM_READ_ONLY,
+			sizeof(float) * count, NULL, NULL);
+		output = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
+			sizeof(float) * kernelsCount, NULL, NULL);
+		if (!inputA || !inputB || !output) {
+			cerr << "Error: Failed to allocate device memory!" << endl;
 			getchar();
 			exit(1);
 		}
-	}
 
-
-	/*
-		// Get the maximum work group size for executing the kernel on the device
-		err = clGetKernelWorkGroupInfo(kernel[0], device_id,
-			CL_KERNEL_WORK_GROUP_SIZE,
-			sizeof(local), &local, NULL);
+		// Transfer the input vector into device memory
+		err = clEnqueueWriteBuffer(commands, inputA,
+			CL_TRUE, 0, sizeof(float) * count,
+			dataA, 0, NULL, NULL);
 		if (err != CL_SUCCESS) {
-			cerr << "Error: Failed to retrieve kernel work group info! "
-				<< err << endl;
-			exit(1);
-		}
-
-		// Execute the kernel over the vector using the
-		// maximum number of work group items for this device
-		global = count;
-		err = clEnqueueNDRangeKernel(commands, kernel[0],
-			1, NULL, &global, &local,
-			0, NULL, NULL);
-		if (err != CL_SUCCESS) {
-			cerr << "Error: Failed to execute kernel!" << endl;
-			return EXIT_FAILURE;
-		}
-	*/
-
-	//Enqueue all the kernels to be executed
-	for (int i = 0; i < KERNELS_COUNT; i++)
-	{
-		err = clEnqueueTask(commands, kernel[i], 0, NULL, NULL);
-		if (err != CL_SUCCESS) {
-			cerr << "Failed to enqueue kernel: ID_" << i << endl;
+			cerr << "Error: Failed to write to source array inputA!" << endl;
 			getchar();
 			exit(1);
 		}
+		err = clEnqueueWriteBuffer(commands, inputB,
+			CL_TRUE, 0, sizeof(float) * count,
+			dataB, 0, NULL, NULL);
+		if (err != CL_SUCCESS) {
+			cerr << "Error: Failed to write to source array inputB!" << endl;
+			getchar();
+			exit(1);
+		}
+
+		// Set the arguments to the compute kernels
+		err = 0;
+		for (int i = 0; i < KERNELS_COUNT; i++)
+		{
+			err = clSetKernelArg(kernel[i], 0, sizeof(cl_mem), &inputA);
+			err |= clSetKernelArg(kernel[i], 1, sizeof(cl_mem), &inputB);
+			err |= clSetKernelArg(kernel[i], 2, sizeof(cl_mem), &output);
+			err |= clSetKernelArg(kernel[i], 3, sizeof(const unsigned int), &count);
+			if (err == CL_INVALID_KERNEL)
+				cout << "Invalid kernel: kernel_" << i << endl;
+			if (err != CL_SUCCESS) {
+				cerr << "Error: Failed to set kernel arguments! " << err << " kernel ID_" << i << endl;
+				getchar();
+				exit(1);
+			}
+		}
+
+		//Enqueue all the kernels to be executed
+		for (int i = 0; i < KERNELS_COUNT; i++)
+		{
+			err = clEnqueueTask(commands, kernel[i], 0, NULL, NULL);
+			if (err != CL_SUCCESS) {
+				cerr << "Failed to enqueue kernel: ID_" << i << endl;
+				getchar();
+				exit(1);
+			}
+		}
+
+		// Wait for all commands to complete
+		clFinish(commands);
+
+		// Read back the results from the device to verify the output
+		err = clEnqueueReadBuffer(commands, output,
+			CL_TRUE, 0, sizeof(float) * kernelsCount,
+			results, 0, NULL, NULL);
+		if (err != CL_SUCCESS) {
+			cerr << "Error: Failed to read output array! " << err << endl;
+			getchar();
+			exit(1);
+		}
+
+		cout << "Calculations complete. Results below " << THRESHOLD << ":" << endl;
+		for (int i = 0; i < KERNELS_COUNT; i++)
+		{
+			if (results[i] < THRESHOLD)
+			{
+				cout << "kernel_" << i << ": " << results[i] << endl;
+
+			}
+		}
+
+
+
+		// Shutdown and cleanup
+		delete[] dataA; delete[] dataB; delete[] results;
+
+		clReleaseMemObject(inputA);
+		clReleaseMemObject(inputB);
+		clReleaseMemObject(output);
 	}
 
-	// Wait for all commands to complete
-	clFinish(commands);
-
-	// Read back the results from the device to verify the output
-	err = clEnqueueReadBuffer(commands, output,
-		CL_TRUE, 0, sizeof(float) * kernelsCount,
-		results, 0, NULL, NULL);
-	if (err != CL_SUCCESS) {
-		cerr << "Error: Failed to read output array! " << err << endl;
-		getchar();
-		exit(1);
-	}
-
-	// Validate our results
-	correct = 0;
-	if (dataA[0] + dataB[0] == results[0])
-	{
-		correct++;
-	}
-	if (dataA[1] * dataB[1] == results[1])
-	{
-		correct++;
-	}
-
-	cout << "Calculations complete. Results:" << endl;
-	for (int i = 0; i < KERNELS_COUNT; i++)
-	{
-		cout << "kernel_" << i << ": " << results[i] << endl;
-	}
-
-	// Shutdown and cleanup
-	delete[] dataA; delete[] dataB; delete[] results;
-
-	clReleaseMemObject(inputA);
-	clReleaseMemObject(inputB);
-	clReleaseMemObject(output);
 	clReleaseProgram(program);
 	for (int i = 0; i < KERNELS_COUNT; i++)
 	{
@@ -344,3 +300,44 @@ int main(int argc, char* argv[])
 	getchar();
 	return 0;
 }
+
+
+/* DATA-PARALLEL EXAMPLE
+// Get the maximum work group size for executing the kernel on the device
+err = clGetKernelWorkGroupInfo(kernel[0], device_id,
+CL_KERNEL_WORK_GROUP_SIZE,
+sizeof(local), &local, NULL);
+if (err != CL_SUCCESS) {
+cerr << "Error: Failed to retrieve kernel work group info! "
+<< err << endl;
+exit(1);
+}
+
+// Execute the kernel over the vector using the
+// maximum number of work group items for this device
+global = count;
+err = clEnqueueNDRangeKernel(commands, kernel[0],
+1, NULL, &global, &local,
+0, NULL, NULL);
+if (err != CL_SUCCESS) {
+cerr << "Error: Failed to execute kernel!" << endl;
+return EXIT_FAILURE;
+}
+*/
+
+//IN-CODE RANDOM NUMBERS GENERATOR
+/*
+float* dataA = new float[DATA_SIZE];    // original data set given to device
+float* dataB = new float[DATA_SIZE];    // original data set given to device
+float* results = new float[KERNELS_COUNT]; // results returned from device
+unsigned int correct;               // number of correct results returned
+cl_mem inputA;                       // device memory used for the input array
+cl_mem inputB;
+cl_mem output;                      // device memory used for the output array
+// Fill the vector with random float values
+unsigned int count = DATA_SIZE;
+unsigned int kernelsCount = KERNELS_COUNT;
+for (unsigned int i = 0; i < count; i++)
+dataA[i] = rand() / (float)RAND_MAX;
+for (unsigned int i = 0; i < count; i++)
+dataB[i] = rand() / (float)RAND_MAX;*/
