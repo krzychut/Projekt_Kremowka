@@ -93,7 +93,7 @@ __kernel void kernel_4(__global float* inputA, __global float* inputB, __global 
 
 	float result = numerator / denominator;
 
-	output[4] = 100.0f * fabs(result);
+	output[4] = result;
 }
 
 // Metryka Canberra
@@ -122,5 +122,190 @@ __kernel void kernel_6(__global float* inputA, __global float* inputB, __global 
 	}
 	output[6] = D;
 }
+// Odleglosc Czekanowskiego
+__kernel void kernel_7(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0, B = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+		fabs ( A += ( inputA[i] - inputB[i]))
+	}
+	for( i = 0; i < count ; i++)
+	{
+        B += ( inputA[i] + inputB[i])
+	}
+	output[7] = A / B;
+}
 
-// Metryka Lorentza
+// Odleglosc  Wave Hedges
+__kernel void kernel_8(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+        A += ( fabs ( inputA[i] - inputB[i]) / ( fmax( inputA[i], inputB[i])));
+	}
+	output[8] = A;
+}
+
+// Odleglosc Kumar - Hassebrook
+__kernel void kernel_9(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0, B = 0, C = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+        A += inputA[i] * inputB[i];
+	}
+	for ( i = 0; i < count ; i++)
+	{
+        B += inputA[i] * inputA[i];
+	}
+	for ( i = 0; i < count ; i++)
+	{
+        C += inputB[i] * inputB[i];
+	}
+	output[9] = A / ( B + C - A);
+}
+
+// Odleglosc Ruzick
+__kernel void kernel_10(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0, B = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+		A += fmin ( inputA[i], inputB[i]);
+	}
+	for( i = 0; i < count ; i++)
+	{
+        B += fmax ( inputA[i], inputB[i]);
+	}
+	output[10] = A / B;
+}
+
+// Odleglosc Tanimoto
+__kernel void kernel_11(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0, B = 0, C = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+        A += fmax ( inputA[i], inputB[i]) - fmin ( inputA[i], inputB[i]);
+	}
+	for ( i = 0; i < count ; i++)
+	{
+        B += fmax ( inputA[i], inputB[i]);
+	}
+	output[11] = A / B;
+}
+
+// Odleglosc Matusita
+__kernel void kernel_12(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+	float A = 0;
+	for ( int i = 0; i < count ; i++)
+	{
+        A += sqrt ( inputA[i] * inputB[i]) ;
+	}
+	output[12] =  sqrt ( 2 - 2 * A);
+}
+
+// Odleglosc Jeffreysa
+__kernel void kernel_13(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i] - inputB[i])*log(inputA[i]/inputB[i]);
+    }
+    output[13] = A;
+}
+
+// Odleglosc Kullback-Leibler
+__kernel void kernel_14(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += inputA[i]*log(inputA[i]/inputB[i]);
+    }
+    output[14] = A;
+}
+
+//K Divergence
+__kernel void kernel_15(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += inputA[i]*log(2*inputA[i]/(inputA[i]+inputB[i]));
+    }
+    output[15] = A;
+}
+
+// Neyman
+__kernel void kernel_16(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i]-inputB[i])*(inputA[i]-inputB[i])/inputB[i];
+    }
+    output[16] = A;
+}
+
+// Taneja
+__kernel void kernel_17(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += ((inputA[i]+inputB[i])/2)*log((inputA[i]+inputB[i])/(2*sqrt(inputA[i]*inputB[i])));
+    }
+    output[17] = A;
+}
+
+// Divergence
+__kernel void kernel_18(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i]-inputB[i])*(inputA[i]-inputB[i])/(inputA[i]+inputB[i])/(inputA[i]+inputB[i]);
+    }
+    output[18] = 2*A;
+}
+
+// Probabilistic Symmetric
+__kernel void kernel_19(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i]-inputB[i])*(inputA[i]-inputB[i])/(inputA[i]+inputB[i]);
+    }
+    output[19] = 2*A;
+}
+
+// Clark
+__kernel void kernel_20(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        float div = inputA[i] - inputB[i];
+        if(div < 0)
+            div *= (-1);
+        A += div / (inputA[i] + inputB[i]);
+    }
+    output[20] = sqrt(A);
+}
+
+// Additive Symmetric
+__kernel void kernel_21(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
+{
+    float A = 0;
+    for(int i = 0 ; i < count ; i++)
+    {
+        A += (inputA[i]-inputB[i])*(inputA[i]-inputB[i])*(inputA[i]+inputB[i])/(inputA[i]*inputB[i]);
+    }
+    output[21] = 2*A;
+}
