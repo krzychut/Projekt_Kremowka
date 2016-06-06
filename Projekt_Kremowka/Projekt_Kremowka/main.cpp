@@ -18,7 +18,7 @@ using namespace std;
 
 #define DATA_SIZE (100000)
 #define MAX_SOURCE_SIZE 0x100000
-#define KERNELS_COUNT 21
+#define KERNELS_COUNT 22
 #define FILE_ROWS 100
 #define FILE_COLUMNS 100
 #define REPETITIONS 100
