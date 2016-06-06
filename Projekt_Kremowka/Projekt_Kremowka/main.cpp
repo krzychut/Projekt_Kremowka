@@ -18,7 +18,7 @@ using namespace std;
 
 #define DATA_SIZE (100000)
 #define MAX_SOURCE_SIZE 0x100000
-#define KERNELS_COUNT 7
+#define KERNELS_COUNT 21
 #define FILE_ROWS 100
 #define FILE_COLUMNS 100
 #define REPETITIONS 100
@@ -312,7 +312,6 @@ cerr << "Error: Failed to retrieve kernel work group info! "
 << err << endl;
 exit(1);
 }
-
 // Execute the kernel over the vector using the
 // maximum number of work group items for this device
 global = count;
