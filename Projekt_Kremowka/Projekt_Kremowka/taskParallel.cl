@@ -289,12 +289,13 @@ __kernel void kernel_19(__global float* inputA, __global float* inputB, __global
 __kernel void kernel_20(__global float* inputA, __global float* inputB, __global float* output, const unsigned int count)
 {
     float A = 0;
+    float dif;
     for(int i = 0 ; i < count ; i++)
     {
-        float div = inputA[i] - inputB[i];
-        if(div < 0)
-            div *= (-1);
-        A += div / (inputA[i] + inputB[i]);
+        dif = inputA[i] - inputB[i];
+        if(dif < 0)
+            dif *= (-1);
+        A += dif / (inputA[i] + inputB[i]);
     }
     output[20] = sqrt(A);
 }
